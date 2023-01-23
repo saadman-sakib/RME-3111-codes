@@ -24,16 +24,20 @@ class Graph:
         return False
 
 
-graph = Graph(4)
+with open("input.txt", "r") as f:
+    nv, ne, _ =  map(int, f.readline().split()) # number of vertices, edges
+    graph = Graph(nv)
 
-graph.add_edge(0,1)
-graph.add_edge(0,2)
-graph.add_edge(1,2)
-graph.add_edge(2,0)
-graph.add_edge(2,3)
-graph.add_edge(3,3)
+    for i in range(ne):
+        u, v = map(int, f.readline().split())
+        graph.add_edge(u, v)
+    
+    nq = int(f.readline()) # number of queries
 
-for i in range(4):
-    for j in range(4):
-        print(f"path {i} to {j} is {graph.bfs(i, j)}")
+    for i in range(nq):
+        s, d = map(int, f.readline().split())
+        if(graph.bfs(s, d)):
+            print(f"path exists from {s} to {d}")
+        else:
+            print(f"No path exits from {s} to {d}")
 
