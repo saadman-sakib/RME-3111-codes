@@ -7,6 +7,9 @@ class Heap:
     
     def compare(self, a, b):
         raise NotImplementedError
+    
+    def cmp(self, a, b):
+        return self.compare(self.items[a], self.items[b])
 
     def swap(self, i, j):
         self.items[i], self.items[j] = self.items[j], self.items[i]
@@ -26,14 +29,14 @@ class Heap:
         elif(j > len(self.items)-1):
             return i
         else:
-            return j if self.compare(i, j) else i
+            return j if self.cmp(i, j) else i
 
     def reheap_up(self):
         size = len(self.items)
         i = size-1
         while i > 0:
             p = self.get_parent(i)
-            if (self.compare(p, i)):
+            if (self.cmp(p, i)):
                 self.swap(i, p)
                 i = p
             else:
@@ -46,7 +49,7 @@ class Heap:
             left = self.get_left_child(i)
             right = self.get_right_child(i)
             new_ind = self.get_max_pos(left, right)
-            if (new_ind < size and self.compare(i, new_ind)):
+            if (new_ind < size and self.cmp(i, new_ind)):
                 self.swap(i, new_ind)
                 i = new_ind
             else:
@@ -63,16 +66,19 @@ class Heap:
         to_pop = self.items.pop()
         self.reheap_down()
         return to_pop
+    
+    def is_empty(self):
+        return len(self.items) == 0
 
 
 class MaxHeap(Heap):
     def compare(self, a, b):
-        return self.items[a] < self.items[b]
+        return a < b
 
 
 class MinHeap(Heap):
     def compare(self, a, b):
-        return self.items[a] > self.items[b]
+        return a > b
 
 
 def heapsort_ascending(l:list):
