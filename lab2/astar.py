@@ -41,8 +41,17 @@ class Edge:
 
 
 class PriorityQueue(Heap):
+    def __init__(self, search="ucs"):
+        super().__init__()
+        self.search = search
+
     def compare(self, a:Node, b:Node):
-        return a.f_n > b.f_n
+        if self.search == "ucs":
+            return a.g > b.g
+        elif self.search == "greedy":
+            return a.h > b.h
+        elif self.search == "astar":
+            return a.f_n > b.f_n
 
 
 class Graph:
@@ -59,38 +68,71 @@ class Graph:
             self.adj_list[source] = []
         self.adj_list[source].append(destination)
     
-    def astar(self, source:Node, destination:Node):
+    def ucs(self, source:Node, destination:Node):
         mark = set()
         queue = PriorityQueue()
         queue.push(source)
 
         while not queue.is_empty():
             node = queue.pop()
-            mark.add(node)
+            # mark.add(node)
             self.path_cost[node] = node.g
             self.parent[node] = node.parent
             if node.value == destination.value:
                 return True
             for edge in self.adj_list[node]:
-                if edge.destination not in mark:
-                    edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
+                # if edge.destination not in mark:
+                edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
                                                 self.huristic[edge.destination.value], 
                                                 node)
-                    queue.push(edge.destination)
+                queue.push(edge.destination)
+        return False
+    
+    def astar(self, source:Node, destination:Node):
+        mark = set()
+        queue = PriorityQueue(search="astar")
+        queue.push(source)
+
+        while not queue.is_empty():
+            node = queue.pop()
+            # mark.add(node)
+            self.path_cost[node] = node.g
+            self.parent[node] = node.parent
+            if node.value == destination.value:
+                return True
+            for edge in self.adj_list[node]:
+                # if edge.destination not in mark:
+                edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
+                                                self.huristic[edge.destination.value], 
+                                                node)
+                queue.push(edge.destination)
         return False
 
-    def print_path(self, source:Node, destination:Node):
-        if self.astar(source, destination):
-            path = []
-            node = destination
-            while node != source:
-                path.append(node.value)
-                node = self.parent[node]
-            path.append(source.value)
-            path.reverse()
-            print(path)
-        else:
-            print("No path found")
+    def print_path(self, source:Node, destination:Node, search="ucs"):
+        if search == "ucs":
+            if self.ucs(source, destination):
+                path = []
+                node = destination
+                while node != source:
+                    path.append(node.value)
+                    node = self.parent[node]
+                path.append(source.value)
+                path.reverse()
+                print(path)
+            else:
+                print("No path found")
+        elif search == "astar":
+            if self.astar(source, destination):
+                path = []
+                node = destination
+                while node != source:
+                    path.append(node.value)
+                    node = self.parent[node]
+                path.append(source.value)
+                path.reverse()
+                print(path)
+            else:
+                print("No path found")
 
 
 if __name__ == "__main__":
@@ -113,4 +155,4 @@ if __name__ == "__main__":
         "g": 0,
     }
     
-    graph.print_path(Node("s"), Node("g"))
+    graph.print_path(Node("s"), Node("g"), search="astar")
