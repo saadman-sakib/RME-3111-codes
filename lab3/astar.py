@@ -29,8 +29,8 @@ class Node:
 
 
 class Edge:
-    def __init__(self, destination, weight):
-        self.destination = destination
+    def __init__(self, destination:Node, weight):
+        self.destination:Node = destination
         self.weight = weight
     
     def __str__(self) -> str:
@@ -69,43 +69,65 @@ class Graph:
         self.adj_list[source].append(destination)
     
     def ucs(self, source:Node, destination:Node):
-        mark = set()
         queue = PriorityQueue()
         queue.push(source)
-
+        self.path_cost[source] = 0
         while not queue.is_empty():
             node = queue.pop()
-            # mark.add(node)
-            self.path_cost[node] = node.g
-            self.parent[node] = node.parent
             if node.value == destination.value:
                 return True
             for edge in self.adj_list[node]:
-                # if edge.destination not in mark:
                 edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
                                                 self.huristic[edge.destination.value], 
                                                 node)
-                queue.push(edge.destination)
+                if(edge.destination in self.path_cost and edge.destination.g >= self.path_cost[edge.destination]):
+                    pass
+                else:
+                    self.path_cost[edge.destination] = edge.destination.g
+                    self.parent[edge.destination] = node
+                    queue.push(edge.destination)
         return False
     
     def astar(self, source:Node, destination:Node):
-        mark = set()
         queue = PriorityQueue(search="astar")
+        source.update_f_n(0, self.huristic[source.value], None)
         queue.push(source)
-
+        self.path_cost[source] = 0
         while not queue.is_empty():
             node = queue.pop()
-            # mark.add(node)
-            self.path_cost[node] = node.g
-            self.parent[node] = node.parent
             if node.value == destination.value:
                 return True
             for edge in self.adj_list[node]:
-                # if edge.destination not in mark:
                 edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
                                                 self.huristic[edge.destination.value], 
                                                 node)
-                queue.push(edge.destination)
+                if(edge.destination in self.path_cost and edge.destination.g >= self.path_cost[edge.destination]):
+                    pass
+                else:
+                    self.path_cost[edge.destination] = edge.destination.g
+                    self.parent[edge.destination] = node
+                    queue.push(edge.destination)
+        return False
+    
+    def greedy(self, source:Node, destination:Node):
+        queue = PriorityQueue(search="greedy")
+        source.update_f_n(0, self.huristic[source.value], None)
+        queue.push(source)
+        self.path_cost[source] = 0
+        while not queue.is_empty():
+            node = queue.pop()
+            if node.value == destination.value:
+                return True
+            for edge in self.adj_list[node]:
+                edge.destination.update_f_n(self.path_cost[node]+edge.weight, 
+                                                self.huristic[edge.destination.value], 
+                                                node)
+                if(edge.destination in self.path_cost and edge.destination.g >= self.path_cost[edge.destination]):
+                    pass
+                else:
+                    self.path_cost[edge.destination] = edge.destination.g
+                    self.parent[edge.destination] = node
+                    queue.push(edge.destination)
         return False
 
     def print_path(self, source:Node, destination:Node, search="ucs"):
@@ -123,6 +145,18 @@ class Graph:
                 print("No path found")
         elif search == "astar":
             if self.astar(source, destination):
+                path = []
+                node = destination
+                while node != source:
+                    path.append(node.value)
+                    node = self.parent[node]
+                path.append(source.value)
+                path.reverse()
+                print(path)
+            else:
+                print("No path found")
+        elif search == "greedy":
+            if self.greedy(source, destination):
                 path = []
                 node = destination
                 while node != source:
@@ -154,5 +188,13 @@ if __name__ == "__main__":
         "c": 2,
         "g": 0,
     }
+
+    # graph.huristic = {
+    #     "s": 8,
+    #     "a": 3,
+    #     "b": 7,
+    #     "c": 2,
+    #     "g": 0,
+    # }
     
     graph.print_path(Node("s"), Node("g"), search="astar")
