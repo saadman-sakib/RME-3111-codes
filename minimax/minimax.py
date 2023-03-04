@@ -51,33 +51,40 @@ class AI:
                     moves.append((i, j))
         return moves
 
-    def min_value_state(self, state):
+    def min_value_state(self, state, alpha, beta):
         if (self.is_terminal(state)):
             return {"value": self.terminal_value(state), "move": None}
         optimal_value = math.inf
         optimal_move = None
         for move in self.allowable_moves(state):
             move_state = self.get_board_after_move(state, move, self.opponent)
-            value = self.max_value_state(move_state)["value"]
+            value = self.max_value_state(move_state, alpha, beta)["value"]
             if (value <= optimal_value):
                 optimal_move = move
                 optimal_value = value
+                beta = min(beta, value)
+            if value < alpha:
+                break
+            
 
         return {"value": optimal_value, "move": optimal_move}
 
-    def max_value_state(self, state):
+    def max_value_state(self, state, alpha, beta):
         if (self.is_terminal(state)):
             return {"value": self.terminal_value(state), "move": None}
         optimal_value = -math.inf
         optimal_move = None
         for move in self.allowable_moves(state):
             move_state = self.get_board_after_move(state, move, self.player)
-            value = self.min_value_state(move_state)["value"]
+            value = self.min_value_state(move_state, alpha, beta)["value"]
             if (value >= optimal_value):
                 optimal_move = move
                 optimal_value = value
+                alpha = max(value, alpha)
+            if value > beta:
+                break
 
         return {"value": optimal_value, "move": optimal_move}
 
     def make_move(self, board):
-        return self.max_value_state(board)["move"]
+        return self.max_value_state(board, -math.inf, math.inf)["move"]
