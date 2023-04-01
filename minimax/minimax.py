@@ -57,8 +57,10 @@ class AI:
         optimal_value = math.inf
         optimal_move = None
         for move in self.allowable_moves(state):
-            move_state = self.get_board_after_move(state, move, self.opponent)
-            value = self.max_value_state(move_state, alpha, beta)["value"]
+            # move_state = self.get_board_after_move(state, move, self.opponent)
+            state[move[0]][move[1]] = self.opponent
+            value = self.max_value_state(state, alpha, beta)["value"]
+            state[move[0]][move[1]] = None
             if (value <= optimal_value):
                 optimal_move = move
                 optimal_value = value
@@ -75,8 +77,10 @@ class AI:
         optimal_value = -math.inf
         optimal_move = None
         for move in self.allowable_moves(state):
-            move_state = self.get_board_after_move(state, move, self.player)
-            value = self.min_value_state(move_state, alpha, beta)["value"]
+            # move_state = self.get_board_after_move(state, move, self.player)
+            state[move[0]][move[1]] = self.player
+            value = self.min_value_state(state, alpha, beta)["value"]
+            state[move[0]][move[1]] = None
             if (value >= optimal_value):
                 optimal_move = move
                 optimal_value = value
