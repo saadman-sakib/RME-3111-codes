@@ -3,14 +3,18 @@ GRID = [
     [0, None, 0, -1.0],
     [0, 0, 0, 0]
 ]
-GAMMA = 0.9
-ALPHA = .5
-N, M = len(GRID), len(GRID[0])
-NOISE = .5
 
 STATES = set()
 TERMINAL_STATES = {(0, 3), (1, 3)}
 Q = {}
+
+N, M = len(GRID), len(GRID[0])
+
+GAMMA = 0.9
+ALPHA = .5
+NOISE = .5
+THRESHOLD = .00001
+
 
 
 def is_terminal(state):
@@ -145,6 +149,8 @@ def policy_extraction(state):
     return action
 
 
+
+
 if __name__ == '__main__':
     import pprint
     import matplotlib.pyplot as plt
@@ -153,7 +159,7 @@ if __name__ == '__main__':
     initialize()
 
     delta = float('inf')
-    while abs(delta) > .00001:
+    while abs(delta) > THRESHOLD:
         delta = 0
         for s in STATES:
             for a in actions(s):
