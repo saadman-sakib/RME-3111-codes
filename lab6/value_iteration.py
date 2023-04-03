@@ -60,16 +60,18 @@ def normalize(p):
 
 
 def transition_probability(state, action):
-        # 20% noise
+        # 40% noise
+        PD = 0.4
+        PN = .3
         i, j = state
         if action == 'U':
-            p =  {(i-1, j): 0.8, (i, j+1): 0.1, (i, j-1): 0.1}
+            p =  {(i-1, j): PD, (i, j+1): PN, (i, j-1): PN}
         elif action == 'D':
-            p =  {(i+1, j): 0.8, (i, j+1): 0.1, (i, j-1): 0.1}
+            p =  {(i+1, j): PD, (i, j+1): PN, (i, j-1): PN}
         elif action == 'L':
-            p =  {(i, j-1): 0.8, (i-1, j): 0.1, (i+1, j): 0.1}
+            p =  {(i, j-1): PD, (i-1, j): PN, (i+1, j): PN}
         elif action == 'R':
-            p =  {(i, j+1): 0.8, (i-1, j): 0.1, (i+1, j): 0.1}
+            p =  {(i, j+1): PD, (i-1, j): PN, (i+1, j): PN}
 
         pfs = possible_future_states(state)
         for s in p:
@@ -91,6 +93,21 @@ def value_update(state):
     
     return value
 
+def policy_extraction(state):
+    value = -float('inf')
+    action = None
+    for a in actions(state):
+        p = transition_probability(state, a)
+        exp_val = 0
+        for s in p:
+            if p[s]:
+                exp_val += p[s]*GRID[s[0]][s[1]]*GAMMA
+        
+        if exp_val > value:
+            value = exp_val
+            action = a    
+    return action
+
 
 if __name__ == '__main__':
     import pprint
@@ -104,18 +121,27 @@ if __name__ == '__main__':
             new_val = value_update(s)
             delta = max( delta,  abs(new_val - GRID[s[0]][s[1]]) )
             GRID[s[0]][s[1]] = new_val
-    pprint.pprint(GRID)
+    # pprint.pprint(GRID)
     a = np.asarray(GRID, dtype=np.float32)
+
+    policies = {}
+    for s in STATES:
+        policy = policy_extraction(s)
+        policies[s] = policy
 
     fig, ax = plt.subplots()
     im = ax.imshow(a, cmap = 'RdYlGn', interpolation = 'nearest')
 
     for i in range(N):
         for j in range(M):
-            if GRID[i][j] != None:
+            if GRID[i][j] != None and (i, j) not in TERMINAL_STATES:
+                txt_display = "%.2f" % GRID[i][j] + "\n" + policies[(i, j)]
+            elif (i, j) in TERMINAL_STATES:
                 txt_display = "%.2f" % GRID[i][j]
             else:
                 txt_display = " "
             text = ax.text(j, i, txt_display,
                         ha="center", va="center", color="black")
     plt.show()
+
+
