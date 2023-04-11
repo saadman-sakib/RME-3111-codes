@@ -16,7 +16,6 @@ NOISE = .5
 THRESHOLD = .00001
 
 
-
 def is_terminal(state):
     if state in  TERMINAL_STATES:
         return True
@@ -38,9 +37,9 @@ def initialize():
                     Q[((i, j), a)] = GRID[i][j]
 
 
-def possible_future_states(state, action):
+def possible_future_states(state):
     i, j = state
-    possible_states = {(i-1, j), (i+1, j), (i, j-1), (i, j+1)}
+    possible_states = {(i-1, j), (i+1, j), (i, j-1), (i, j+1), (i, j)}
     # removing states with obstacles
     if i==0:
         possible_states.remove((i-1, j))
@@ -50,21 +49,6 @@ def possible_future_states(state, action):
         possible_states.remove((i, j-1))
     if j==M-1:
         possible_states.remove((i, j+1))
-
-    # removing impossible states
-    if action == 'U':
-        try:possible_states.remove((i+1, j))
-        except:pass
-    elif action == 'D':
-        try:possible_states.remove((i-1, j))
-        except:pass
-    elif action == 'L':
-        try:possible_states.remove((i, j+1))
-        except:pass
-    elif action == 'R':
-        try:possible_states.remove((i, j-1))
-        except:pass
-
 
     tmp_states = possible_states.copy()
     for i, j in tmp_states:
@@ -82,29 +66,30 @@ def normalize(p):
 
 
 def transition_probability(state, action):
-    # 40% noise
-    PD = 1 - NOISE
-    PN = NOISE/2
+    """
+    Returns a dictionary of possible future states and their probabilities
+    """
+    PD = 0.8
+    PN = .1
     i, j = state
     if action == 'U':
-        p =  {(i-1, j): PD, (i, j+1): PN, (i, j-1): PN}
+        p =  {(i-1, j): PD, (i, j+1): PN, (i, j-1): PN, (i, j): 0}
     elif action == 'D':
-        p =  {(i+1, j): PD, (i, j+1): PN, (i, j-1): PN}
+        p =  {(i+1, j): PD, (i, j+1): PN, (i, j-1): PN, (i, j): 0}
     elif action == 'L':
-        p =  {(i, j-1): PD, (i-1, j): PN, (i+1, j): PN}
+        p =  {(i, j-1): PD, (i-1, j): PN, (i+1, j): PN, (i, j): 0}
     elif action == 'R':
-        p =  {(i, j+1): PD, (i-1, j): PN, (i+1, j): PN}
+        p =  {(i, j+1): PD, (i-1, j): PN, (i+1, j): PN, (i, j): 0}
 
-    pfs = possible_future_states(state, action)
+    pfs = possible_future_states(state)
     for s in p:
         if s not in pfs:
+            p[state] +=   p[s]
             p[s] = 0
-    p = normalize(p)
     return p
 
     
 def reward(state):
-    # expected reward of all possible future states
     i, j = state
     if (i, j) in TERMINAL_STATES:
         return GRID[i][j]
@@ -115,7 +100,6 @@ def reward(state):
 def expected_future_Q(state, action):
     if is_terminal(state):
         return reward(state)
-    
     p = transition_probability(state, action)
     exp_reward = 0
     for s in p:
@@ -125,14 +109,7 @@ def expected_future_Q(state, action):
 
 
 def q_update(state, action):
-    
-    exp_q_val = 0
-    tp = transition_probability(state, action)
-    for s in possible_future_states(state, action):
-        max_future_q = -float('inf')
-        for a in actions(s):
-            max_future_q = max(max_future_q, Q[(s, a)])
-        exp_q_val += tp[s]*max_future_q
+    exp_q_val = expected_future_Q(state, action)
     new_val = Q[(state, action)] + ALPHA * (reward(state) + GAMMA*exp_q_val - Q[(state, action)])
     return new_val
 
@@ -147,8 +124,6 @@ def policy_extraction(state):
             action = a
     GRID[state[0]][state[1]] = value
     return action
-
-
 
 
 if __name__ == '__main__':

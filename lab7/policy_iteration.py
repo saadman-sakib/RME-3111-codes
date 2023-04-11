@@ -87,28 +87,28 @@ def transition_probability(state, action):
     return p
 
 
-def value_update(state):
+def get_value(state, action):
+    p = transition_probability(state, action)
+    exp_val = 0
+    for s in p:
+        if p[s]:
+            exp_val += p[s]*GRID[s[0]][s[1]]*GAMMA
+    return exp_val
+
+
+def max_expected_value(state):
     value = -float('inf')
     for a in actions(state):
-        p = transition_probability(state, a)
-        exp_val = 0
-        for s in p:
-            if p[s]:
-                exp_val += p[s]*GRID[s[0]][s[1]]*GAMMA
+        exp_val = get_value(state, a)
         value = max(exp_val, value)
-    
     return value
+
 
 def policy_extraction(state):
     value = -float('inf')
     action = None
     for a in actions(state):
-        p = transition_probability(state, a)
-        exp_val = 0
-        for s in p:
-            if p[s]:
-                exp_val += p[s]*GRID[s[0]][s[1]]*GAMMA
-        
+        exp_val = get_value(state, a)
         if exp_val > value:
             value = exp_val
             action = a    
@@ -116,25 +116,27 @@ def policy_extraction(state):
 
 
 if __name__ == '__main__':
-    import pprint
     import matplotlib.pyplot as plt
     import numpy as np
 
-    delta = float('inf')
-    while abs(delta) > .0000001:
-    # for i in range(100):
-        delta = 0
+    best_policies = [['U' for i in range(M)] for i in range(N)]
+
+    for i in range(10):
+        delta = float('inf')
+        # Value iteration in fixed policy
+        while abs(delta) > .00001:
+            delta = 0
+            i = 0
+            for s in STATES:
+                new_val = get_value(s, best_policies[s[0]][s[1]])
+                delta += abs(new_val - GRID[s[0]][s[1]])
+                GRID[s[0]][s[1]] = new_val
+        # Policy Update
         for s in STATES:
-            new_val = value_update(s)
-            delta = max( delta,  abs(new_val - GRID[s[0]][s[1]]) )
-            GRID[s[0]][s[1]] = new_val
-    # pprint.pprint(GRID)
+            best_policies[s[0]][s[1]] = policy_extraction(s)
+        
     a = np.asarray(GRID, dtype=np.float32)
 
-    policies = {}
-    for s in STATES:
-        policy = policy_extraction(s)
-        policies[s] = policy
 
     fig, ax = plt.subplots()
     im = ax.imshow(a, cmap = 'RdYlGn', interpolation = 'nearest')
@@ -142,7 +144,7 @@ if __name__ == '__main__':
     for i in range(N):
         for j in range(M):
             if GRID[i][j] != None and (i, j) not in TERMINAL_STATES:
-                txt_display = "%.2f" % GRID[i][j] + "\n" + policies[(i, j)]
+                txt_display = "%.2f" % GRID[i][j] + "\n" + best_policies[i][j]
             elif (i, j) in TERMINAL_STATES:
                 txt_display = "%.2f" % GRID[i][j]
             else:
